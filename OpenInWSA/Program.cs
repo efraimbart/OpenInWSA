@@ -8,7 +8,7 @@ using OpenInWSA.Enums;
 using OpenInWSA.Extensions;
 using OpenInWSA.Properties;
 
-const string openInWsa = "OpenInWSA";
+const string openInWsa = "Open In WSA";
 const string openInWsaProgId = "OpenInWSAURL";
 const string wsaClient = "WsaClient";
 
@@ -100,7 +100,7 @@ bool RegisterAsBrowserInner()
         using var openInWsaKey = Registry.LocalMachine.CreateSubKey($@"software\Clients\StartMenuInternet\{openInWsa}");
         
         using var capabilitiesKey = openInWsaKey.CreateSubKey("Capabilities");
-        capabilitiesKey.SetValue("ApplicationDescription", "Open In WSA");
+        capabilitiesKey.SetValue("ApplicationDescription", openInWsa);
         capabilitiesKey.SetValue("ApplicationIcon", $"\"{path}\",0");
         capabilitiesKey.SetValue("ApplicationName", openInWsa);
 
@@ -119,6 +119,11 @@ bool RegisterAsBrowserInner()
         openInWsaUrlKey.SetValue("EditFlags", 0x2); //TODO: Find out if needed
         openInWsaUrlKey.SetValue("FriendlyTypeName", openInWsa); //TODO: Find out if needed
         openInWsaUrlKey.SetValue("URL Protocol", "");
+        
+        using var urlApplicationKey = openInWsaUrlKey.CreateSubKey("Application");
+        urlApplicationKey.SetValue("ApplicationDescription", openInWsa);
+        urlApplicationKey.SetValue("ApplicationIcon", $"\"{path}\",0");
+        urlApplicationKey.SetValue("ApplicationName", openInWsa);
 
         using var urlDefaultIconKey = openInWsaUrlKey.CreateSubKey("DefaultIcon");
         defaultIconKey.SetValue("", $"\"{path}\",0");
@@ -127,7 +132,7 @@ bool RegisterAsBrowserInner()
         urlCommandKey.SetValue("", $"\"{path}\" \"%1\"");
 
         using var registeredApplications = Registry.LocalMachine.CreateSubKey(@"Software\RegisteredApplications");
-        registeredApplications.SetValue(openInWsa, @"Software\Clients\StartMenuInternet\OpenInWSA\Capabilities");
+        registeredApplications.SetValue(openInWsa, $@"Software\Clients\StartMenuInternet\{openInWsa}\Capabilities");
     }
     catch
     {
