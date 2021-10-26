@@ -1,37 +1,34 @@
 ﻿using System;
+using System.Management;
 using System.Diagnostics;
 using System.Linq;
-using System.Web;
 using Microsoft.Win32;
 using OpenInWSA.Classes;
 using OpenInWSA.Enums;
+using OpenInWSA.Extensions;
 using OpenInWSA.Properties;
 
 const string openInWsa = "OpenInWSA";
 const string openInWsaProgId = "OpenInWSAURL";
+const string wsaClient = "WsaClient";
 
 CheckElevate();
 CheckInit();
 
-var urlValidity = TryGetUrl(out var url);
-
-switch (urlValidity)
+if (args.Any())
 {
-    case UrlValidity.InvalidUrl:
-        if (args.Any())
-        {
-            Console.WriteLine(@$"Invalid url '{args[0]}'");
-            Console.WriteLine();
-        }
-            
-        while (MainMenu()) { }
-        break;
-    case UrlValidity.OpenInWsa:
-        OpenInWsa(url);
-        break;
-    case UrlValidity.OpenInBrowser:
-        OpenInBrowser(url);
-        break;
+    if (GetParentProcess().ProcessName == wsaClient)
+    {
+        OpenInBrowser(args[0]);
+    }
+    else
+    {
+        OpenInWsa(args[0]);
+    }
+}
+else
+{
+    while (MainMenu()) { }
 }
 
 void CheckElevate()
@@ -140,49 +137,17 @@ bool RegisterAsBrowserInner()
     return true;
 }
 
-UrlValidity TryGetUrl(out Uri url)
+Process GetParentProcess()
 {
-    if (!args.Any())
-    {
-        url = null;
-        return UrlValidity.InvalidUrl;
-    }
-            
-    var urlString = args[0];
+    //https://stackoverflow.com/questions/2531837/how-can-i-get-the-pid-of-the-parent-process-of-my-application/2533287#2533287
+    var myId = Environment.ProcessId;
+    var query = $"SELECT ParentProcessId FROM Win32_Process WHERE ProcessId = {myId}";
+    var search = new ManagementObjectSearcher("root\\CIMV2", query);
+    var queryObj = search.Get().First();
+    var parentId = (uint)queryObj["ParentProcessId"];
+    var parent = Process.GetProcessById((int)parentId);
 
-    if (string.IsNullOrWhiteSpace(urlString) ||
-        !Uri.TryCreate(urlString, UriKind.Absolute, out var tempUrl))
-    {
-        url = null;
-        return UrlValidity.InvalidUrl;
-    }
-    
-    var query = HttpUtility.ParseQueryString(tempUrl.Query);
-
-    if (query.GetValues(openInWsa)?.Any() ?? false)
-    {
-        query.Remove(openInWsa);
-
-        var uriBuilder = new UriBuilder(tempUrl)
-        {
-            Query = query.ToString()
-        };
-
-        url = uriBuilder.Uri;
-        return UrlValidity.OpenInBrowser;
-    }
-    else
-    {
-        query.Set(openInWsa, true.ToString());
-
-        var uriBuilder = new UriBuilder(tempUrl)
-        {
-            Query = query.ToString()
-        };
-
-        url = uriBuilder.Uri;
-        return UrlValidity.OpenInWsa;
-    }
+    return parent;
 }
 
 bool MainMenu()
@@ -327,7 +292,7 @@ Browser GetBrowserFromProgId(string progId) {
 
 string GetCommandFromBrowser(Browser browser)
 {
-    //TODO: This will throw an exception if it can't find command
+    //TODO: This will throw an exception if it can't find command, instead request a new default browser from the user
     using var progKey = Registry.ClassesRoot.OpenSubKey(browser.ProgId);
     using var commandKey = progKey.OpenSubKey(@"shell\open\command");
     var command = commandKey.GetValue(null).ToString();
@@ -335,7 +300,7 @@ string GetCommandFromBrowser(Browser browser)
     return command;
 }
 
-void OpenInWsa(Uri url)
+void OpenInWsa(string url)
 {
     var command = $"shell am start -W -a android.intent.action.VIEW -d \"{url}\"";
     var info = new ProcessStartInfo(Settings.Default.AdbLocation, command)
@@ -346,11 +311,11 @@ void OpenInWsa(Uri url)
     var proc = Process.Start(info);
 }
 
-void OpenInBrowser(Uri url)
+void OpenInBrowser(string url)
 {
     var browser = new Browser(Settings.Default.DefaultBrowser);
 
-    var command = GetCommandFromBrowser(browser).Replace("%1", url.ToString());
+    var command = GetCommandFromBrowser(browser).Replace("%1", url);
     var info = new ProcessStartInfo("cmd", $"/c {command}")
     {
         UseShellExecute = false,

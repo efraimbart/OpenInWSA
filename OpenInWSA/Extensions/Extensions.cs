@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Management;
 
 namespace OpenInWSA.Extensions
 {
@@ -10,6 +11,13 @@ namespace OpenInWSA.Extensions
             if (!index.HasValue) return default;
 
             return Enumerable.ElementAtOrDefault(source, index.Value);
+        }
+
+        public static ManagementBaseObject First(this ManagementObjectCollection source)
+        {
+            var results = source.GetEnumerator();
+            results.MoveNext();
+            return results.Current;
         }
     }
 }
