@@ -8,14 +8,12 @@ using OpenInWSA.Extensions;
 using OpenInWSA.Managers;
 using OpenInWSA.Properties;
 
-const string wsaClient = "WsaClient";
-
 CheckElevate();
 CheckInit();
 
 if (args.Any())
 {
-    if (GetParentProcess().ProcessName == wsaClient)
+    if (GetParentProcess().ProcessName == WsaManager.WsaClient)
     {
         BrowserManager.OpenInBrowser(args[0]);
     }
@@ -58,7 +56,10 @@ void CheckInit()
 {
     if (Settings.Default.AdbLocation == null)
     {
-        WsaManager.UpdateAdbLocation();
+        if (!WsaManager.InitAdbLocation())
+        {
+            while (!WsaManager.UpdateAdbLocation(cancelable: false)) {}
+        }
     }
 
     if (Settings.Default.DefaultBrowser == null)
@@ -112,10 +113,10 @@ bool MainMenu()
     switch (mainMenuChoice?.Value)
     {
         case MainMenuChoices.AdbLocation:
-            WsaManager.UpdateAdbLocation();
+            while (!WsaManager.UpdateAdbLocation(cancelable: true)) {}
             break;
         case MainMenuChoices.DefaultBrowser:
-            BrowserManager.UpdateDefaultBrowser(cancelable: true);
+            while (!BrowserManager.UpdateDefaultBrowser(cancelable: true)) {}
             break;
         case MainMenuChoices.ReRegisterAsBrowser:
             BrowserManager.RegisterAsBrowser();

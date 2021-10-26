@@ -44,12 +44,18 @@ namespace OpenInWSA.Managers
                 .Default(oldDefaultBrowserIndex)
                 .Choose();
 
-            if (defaultBrowserChoice == null) return false;
+            if (defaultBrowserChoice == null)
+            {
+                Console.WriteLine("Bad selection");
+                Console.WriteLine();
+                
+                return false;
+            }
 
             switch (defaultBrowserChoice.Value)
             {
                 case "Cancel":
-                    return false;
+                    return true;
                 default:
                     var defaultBrowser = browsers.First(browser => browser.Name == defaultBrowserChoice.Value);
                     
