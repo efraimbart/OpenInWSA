@@ -33,7 +33,7 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet publish -r win-x64 -c release -p:Version=${{ needs.release.outputs.version }} -p:PublishSingleFile=true -p:PublishReadyToRun=true --self-contained true --framework net6.0
+      run: dotnet publish -r win-x64 -c release -p:Version=${${{ needs.release.outputs.version }}#v} -p:PublishSingleFile=true -p:PublishReadyToRun=true --self-contained true --framework net6.0
     - name: Add Release files
       uses: ncipollo/release-action@v1
       with:
