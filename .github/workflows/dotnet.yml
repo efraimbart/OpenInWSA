@@ -29,10 +29,18 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 6.0.x
+        include-prerelease: true
+    - name: substring-action
+      uses: bhowell2/github-substring-action@v1.0.0
+      id: substring
+      with:
+        value: ${{ needs.release.outputs.version }}
+        output_name: version
+        index_of_str: v
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet publish -r win-x64 -c release -p:Version=${{ needs.release.outputs.version }} -p:PublishSingleFile=true -p:PublishReadyToRun=true --self-contained true --framework net6.0
+      run: dotnet publish -r win-x64 -c release -p:Version=${{ steps.substring.outputs.version }} -p:PublishSingleFile=true -p:PublishReadyToRun=true --self-contained true --framework net6.0
     - name: Add Release files
       uses: ncipollo/release-action@v1
       with:
@@ -41,4 +49,4 @@ jobs:
         omitBodyDuringUpdate: true
         omitNameDuringUpdate: true
         tag: ${{ needs.release.outputs.tag_name }}
-        artifacts: GitCheckout/bin/Release/net5.0/win-x64/publish/GitCheckout.exe
+        artifacts: OpenInWSA/bin/Release/net6.0/win-x64/publish/OpenInWSA.exe
