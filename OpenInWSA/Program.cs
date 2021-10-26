@@ -295,14 +295,21 @@ Browser GetBrowserFromProgId(string progId) {
     };
 }
 
-string GetCommandFromBrowser(Browser browser)
+bool TryGetCommandFromBrowser(Browser browser, out string command)
 {
-    //TODO: This will throw an exception if it can't find command, instead request a new default browser from the user
     using var progKey = Registry.ClassesRoot.OpenSubKey(browser.ProgId);
-    using var commandKey = progKey.OpenSubKey(@"shell\open\command");
-    var command = commandKey.GetValue(null).ToString();
 
-    return command;
+    if (progKey == null)
+    {
+        command = null;
+        return false;
+    }
+    
+    //TODO: This will throw an exception if it can't find command for the progId
+    using var commandKey = progKey.OpenSubKey(@"shell\open\command");
+    command = commandKey.GetValue(null).ToString();
+
+    return true;
 }
 
 void OpenInWsa(string url)
@@ -320,13 +327,21 @@ void OpenInBrowser(string url)
 {
     var browser = new Browser(Settings.Default.DefaultBrowser);
 
-    var command = GetCommandFromBrowser(browser).Replace("%1", url);
+    if (!TryGetCommandFromBrowser(browser, out var command))
+    {
+        while (!UpdateDefaultBrowser(cancelable: false)) { }
+
+        OpenInBrowser(url);
+        return;
+    }
+
+    command = command.Replace("%1", url);
     var info = new ProcessStartInfo("cmd", $"/c {command}")
     {
         UseShellExecute = false,
         CreateNoWindow = true
     };
-    var proc = Process.Start(info); 
+    var proc = Process.Start(info);
 }
 
 bool Elevate()
