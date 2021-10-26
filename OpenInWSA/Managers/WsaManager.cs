@@ -46,7 +46,7 @@ namespace OpenInWSA.Managers
 
             Console.WriteLine(oldAdbLocation != null
                 ? $@"Updated the ADB path from ""{oldAdbLocation}"" to ""{adbLocation}"""
-                : $@"Set the ADB path ""{adbLocation}""");
+                : $@"Set the ADB path to ""{adbLocation}""");
             Console.WriteLine();
 
             return true;
