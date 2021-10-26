@@ -33,10 +33,26 @@ else
 
 void CheckElevate()
 {
-    if (args.Any() && args[0] == "/elevate")
+    if (args.Any() && args[0] == "/elevateFor")
     {
-        var exitCode = RegisterAsBrowserInner() ? 0 : 1;
-        Environment.Exit(exitCode);
+
+        if (!Enum.TryParse<ElevateFor>(args[1], out var elevateFor))
+        {
+            Environment.Exit(1);
+        }
+                
+        int exitCode;
+        switch (elevateFor)
+        {
+            case ElevateFor.Register:
+                exitCode = RegisterAsBrowserInner() ? 0 : 1;
+                Environment.Exit(exitCode);
+                break;
+            case ElevateFor.Deregister:
+                exitCode = DeregisterAsBrowserInner() ? 0 : 1;;
+                Environment.Exit(exitCode);
+                break;
+        }
     }
 }
 
@@ -75,7 +91,7 @@ bool RegisterAsBrowser()
 {
     Console.WriteLine(@"Registering as browser");
 
-    if (RegisterAsBrowserInner() || Elevate())
+    if (RegisterAsBrowserInner() || Elevate(ElevateFor.Register))
     {
         Console.WriteLine(@"Successfully registered as browser.");
         Console.WriteLine();
@@ -85,6 +101,7 @@ bool RegisterAsBrowser()
     else
     {
         Console.WriteLine(@"Failed to register as browser. To register as browser, please attempt to run the application manually as administrator.");
+        Console.WriteLine();
 
         return false;
     }
@@ -142,6 +159,44 @@ bool RegisterAsBrowserInner()
     return true;
 }
 
+bool DeregisterAsBrowser()
+{
+    Console.WriteLine(@"Deregistering as browser");
+
+    if (DeregisterAsBrowserInner() || Elevate(ElevateFor.Deregister))
+    {
+        Console.WriteLine(@"Successfully deregistered as browser.");
+        Console.WriteLine();
+
+        return true;
+    }
+    else
+    {
+        Console.WriteLine(@"Failed to deregister as browser. To deregister as browser, please attempt to run the application manually as administrator.");
+        Console.WriteLine();
+
+        return false;
+    }
+}
+
+bool DeregisterAsBrowserInner()
+{
+    try
+    {
+        Registry.LocalMachine.DeleteSubKeyTree($@"software\Clients\StartMenuInternet\{openInWsa}", throwOnMissingSubKey: false);
+        Registry.ClassesRoot.DeleteSubKeyTree(openInWsaProgId, throwOnMissingSubKey: false);
+        
+        using var registeredApplications = Registry.LocalMachine.CreateSubKey(@"Software\RegisteredApplications");
+        registeredApplications.DeleteValue(openInWsa, throwOnMissingValue: false);
+    }
+    catch
+    {
+        return false;
+    }
+
+    return true;
+}
+
 Process GetParentProcess()
 {
     //https://stackoverflow.com/questions/2531837/how-can-i-get-the-pid-of-the-parent-process-of-my-application/2533287#2533287
@@ -162,6 +217,7 @@ bool MainMenu()
             .Add(@"Update ADB location", MainMenuChoices.AdbLocation)
             .Add(@"Update default browser", MainMenuChoices.DefaultBrowser)
             .Add(@"Re-register as browser", MainMenuChoices.ReRegisterAsBrowser)
+            .Add(@"Deregister as browser", MainMenuChoices.DeregisterAsBrowser)
             .Add("Exit", MainMenuChoices.Exit)
             .Choose();
                 
@@ -174,7 +230,11 @@ bool MainMenu()
             UpdateDefaultBrowser(cancelable: true);
             break;
         case MainMenuChoices.ReRegisterAsBrowser:
-            return RegisterAsBrowser();
+            RegisterAsBrowser();
+            break;
+        case MainMenuChoices.DeregisterAsBrowser:
+            DeregisterAsBrowser();
+            break;
         case MainMenuChoices.Exit:
             return false;
     }
@@ -344,7 +404,8 @@ void OpenInBrowser(string url)
     var proc = Process.Start(info);
 }
 
-bool Elevate()
+
+bool Elevate(ElevateFor elevateFor)
 {
     using var currentProcess = Process.GetCurrentProcess();
     var path = currentProcess.MainModule?.FileName;
@@ -352,7 +413,7 @@ bool Elevate()
     try
     {
                     
-        var startInfo = new ProcessStartInfo(path, "/elevate")
+        var startInfo = new ProcessStartInfo(path, $"/elevateFor {elevateFor}")
         {
             UseShellExecute = true,
             Verb = "runas"

@@ -5,6 +5,7 @@
         AdbLocation,
         DefaultBrowser,
         ReRegisterAsBrowser,
+        DeregisterAsBrowser,
         Exit
     }
 }
