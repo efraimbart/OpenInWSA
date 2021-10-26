@@ -251,6 +251,7 @@ bool UpdateDefaultBrowser(bool cancelable)
     //TODO: This will throw an exception if it can't find RegisteredApplications, URLAssociations or http
     var browsers = registeredApplications
         .GetValueNames()
+        .Where(name => name != openInWsa)
         .Select(name => registeredApplications.GetValue(name) as string)
         .Where(value => value != null && value.StartsWith(@"Software\Clients\StartMenuInternet\"))
         .Select(value =>
