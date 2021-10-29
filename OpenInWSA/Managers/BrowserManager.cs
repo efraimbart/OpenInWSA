@@ -1,6 +1,6 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Microsoft.Win32;
 using OpenInWSA.Classes;
 using OpenInWSA.Enums;
@@ -29,18 +29,19 @@ namespace OpenInWSA.Managers
                 {
                     using var urlAssociationsKey = Registry.LocalMachine.OpenSubKey($@"{value}\URLAssociations");
                     var progId = urlAssociationsKey.GetValue("http").ToString();
-                    
+
                     return GetBrowserFromProgId(progId);
                 }).ToList();
-
-            var browserChoices = browsers.Select(browser => browser.Name).ToList();
             
-            var oldDefaultBrowser = Settings.Default.DefaultBrowser;
-            var oldDefaultBrowserIndex = oldDefaultBrowser != null
-                ? (int?) browserChoices.IndexOf(new Browser(oldDefaultBrowser).Name)
+            var oldDefaultBrowser = Settings.Default.DefaultBrowser != null 
+                ? new Browser(Settings.Default.DefaultBrowser)
                 : null;
+            var oldDefaultBrowserIndex = Settings.Default.DefaultBrowser != null && cancelable 
+                ? browsers.IndexOf(oldDefaultBrowser)
+                : (int?)null;
 
-            var defaultBrowserChoice = new Choices($@"Please select a default browser:", browserChoices)
+            var defaultBrowserChoice = new Choices<object>($@"Please select a default browser:")
+                .AddRange(browsers, browser => browser.Name)
                 .Add("Cancel", condition: cancelable)
                 .Default(oldDefaultBrowserIndex)
                 .Choose();
@@ -56,19 +57,20 @@ namespace OpenInWSA.Managers
             switch (defaultBrowserChoice.Value)
             {
                 case "Cancel":
-                    return true;
-                default:
-                    var defaultBrowser = browsers.First(browser => browser.Name == defaultBrowserChoice.Value);
-                    
+                case Browser defaultBrowser when defaultBrowser == oldDefaultBrowser:
+                    return cancelable;
+                case Browser defaultBrowser:
                     Settings.Default.DefaultBrowser = defaultBrowser.ToString();
                     Settings.Default.Save();
 
                     Console.WriteLine(oldDefaultBrowser != null
-                        ? $@"Updated the the default browser from ""{new Browser(oldDefaultBrowser).Name}"" to ""{defaultBrowser.Name}"""
+                        ? $@"Updated the the default browser from ""{oldDefaultBrowser.Name}"" to ""{defaultBrowser.Name}"""
                         : $@"Set the the default browser to ""{defaultBrowser.Name}""");
                     Console.WriteLine();
 
                     return true;
+                default:
+                    return false;
             }
         }
         

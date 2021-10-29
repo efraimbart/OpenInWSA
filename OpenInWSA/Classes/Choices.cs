@@ -5,7 +5,7 @@ using OpenInWSA.Extensions;
 
 namespace OpenInWSA.Classes
 {
-    public class Choices<T> : List<Choices<T>.Choice>
+    public class Choices<T> : List<Choices<T>.IChoice<T>>
     {
         private string Question { get; set; }
         private int? DefaultChoice { get; set; }
@@ -15,6 +15,17 @@ namespace OpenInWSA.Classes
             Question = question;
         }
         
+        public Choices(string question, IEnumerable<KeyValuePair<string, T>> choices) : this(question)
+        {
+            AddRange(choices.Select(choice => new Choice(choice)));
+        }
+
+        public Choices<T> AddRange<TAdd>(IEnumerable<TAdd> values, Func<TAdd, string> getText) where TAdd : T
+        {
+            AddRange(values.Select(choice => (IChoice<T>)new Choice<TAdd>(choice, getText)));
+            return this;
+        }
+
         public Choices<T> Add(string text, T value, bool defaultChoice = false, bool condition = true)
         {
             if (condition)
@@ -40,7 +51,7 @@ namespace OpenInWSA.Classes
             return this;
         }
 
-        public Choice Choose()
+        public IChoice<T> Choose()
         {
             var defaultChoice = this.ElementAtOrDefault(DefaultChoice);
             var questionWithDefault = defaultChoice != null 
@@ -76,21 +87,46 @@ namespace OpenInWSA.Classes
 
             return null;
         }
+        
+        public interface IChoice<out TChoice> where TChoice : T
+        {
+            string Text { get; }
+            TChoice Value { get; }
+        }
+        
+        public class Choice : Choice<T>
+        {
+            public Choice() : base()
+            {
+            }
 
-        public class Choice
+            public Choice(KeyValuePair<string, T> choice) : base(choice)
+            {
+            }
+
+            public Choice(T choice, Func<T, string> getText) : base(choice, getText)
+            {
+            }
+        }
+
+        public class Choice<TChoice> : IChoice<TChoice> where TChoice : T
         {
             public string Text { get; set; }
-            public T Value { get; set; }
-        }
-    }
+            public TChoice Value { get; set; }
 
-    public class Choices : Choices<string>
-    {
-        public Choices(string question, IEnumerable<string> collection) : base(question)
-        {
-            foreach (var choice in collection)
+            public Choice()
             {
-                Add(choice);
+            }
+
+            public Choice(KeyValuePair<string, TChoice> choice)
+            {
+                (Text, Value) = choice;
+            }
+            
+            public Choice(TChoice choice, Func<TChoice, string> getText)
+            {
+                Text = getText(choice);
+                Value = choice;
             }
         }
     }
