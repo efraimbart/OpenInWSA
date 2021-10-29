@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 using OpenInWSA.Properties;
 using SharpAdbClient;
+using SharpAdbClient.Exceptions;
 using Console = OpenInWSA.Classes.Console;
 
 namespace OpenInWSA.Managers
@@ -23,6 +24,10 @@ namespace OpenInWSA.Managers
         private const string Adb = @"adb";
         private const string ExecutableExtension = @".exe";
         private const string AdbExecutable = $@"{Adb}{ExecutableExtension}";
+
+        private const string DeviceOffline = "device offline";
+        private const string DeviceStillAuthorizing = "device still authorizing";
+        
         private const string Host = @"127.0.0.1";
         private const int Port = 58526;
         
@@ -113,26 +118,16 @@ namespace OpenInWSA.Managers
                 var proc = Process.GetProcessesByName(WsaClient).FirstOrDefault();
                 if (proc == null)
                 {
-                    var info = new ProcessStartInfo(WsaClient)
+                    var info = new ProcessStartInfo(WsaClient, "/launch wsa://system")
                     {
                         UseShellExecute = false,
                         CreateNoWindow = true
                     };
                     proc = Process.Start(info);
-
-                    //TODO: Figure out how to reliably check if WSA is running
-                    OpenInBrowser(url, "Starting WSA... opening url in browser for now.");
-                    return;
-                    
-                    // Console.WriteLine("Starting WSA, please wait.");
-                    // Console.WriteLine();
                 }
 
                 if (!AdbServer.GetStatus().IsRunning)
                 {
-                    Console.WriteLine("Starting ADB, please wait.");
-                    Console.WriteLine();
-
                     if (!TryGetAdbLocation(Settings.Default.AdbLocation, out var finalAdbLocation))
                     {
                         while (!UpdateAdbLocation(cancelable: false)) {}
@@ -145,24 +140,22 @@ namespace OpenInWSA.Managers
                 var device = AdbClient.GetDevices().FirstOrDefault(device => device.Serial == HostAndPortString);
                 if (device == null)
                 {
-                    Console.WriteLine("Connecting ADB to WSA, please wait.");
-                    Console.WriteLine();
-
-                    //TODO: See if there's a way to reliably use adb connection to identify if WSA has started running
-                    AdbClient.Connect(new DnsEndPoint(Host, Port));
-
                     do
                     {
-                        // AdbClient.Connect(new DnsEndPoint(Host, Port));
+                        AdbClient.Connect(new DnsEndPoint(Host, Port));
                         Thread.Sleep(100);
                     } 
                     while ((device = AdbClient.GetDevices().FirstOrDefault(device => device.Serial == HostAndPortString)) == null);
                 }
+
+                while (!CheckWsaViaAdb(device))
+                {
+                    Thread.Sleep(100);
+                }
                 
                 var command = $"am start -W -a android.intent.action.VIEW -d \"{url}\"";
 
-                AdbClient.ExecuteRemoteCommandAsync(command, device, new ConsoleOutputReceiver(),
-                    new CancellationToken());
+                AdbClient.ExecuteRemoteCommand(command, device, new ConsoleOutputReceiver());
             }
             catch(Exception e)
             {
@@ -170,6 +163,25 @@ namespace OpenInWSA.Managers
             }
         }
 
+        private static bool CheckWsaViaAdb(DeviceData device)
+        {
+            try
+            {
+                AdbClient.ExecuteRemoteCommand("getprop sys.boot_completed", device, new ConsoleOutputReceiver());
+            }
+            catch (AdbException e)
+            {
+                if (e.Response.Message is DeviceOffline or DeviceStillAuthorizing)
+                {
+                    return false;
+                }
+
+                throw;
+            }
+
+            return true;
+        }
+        
         private static void OpenInBrowser(string url, string message)
         {
             Console.WriteLine(message);
