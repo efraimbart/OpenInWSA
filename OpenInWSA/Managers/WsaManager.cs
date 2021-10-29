@@ -5,6 +5,7 @@ using System.Net;
 using System.Threading;
 using OpenInWSA.Properties;
 using SharpAdbClient;
+using Console = OpenInWSA.Classes.Console;
 
 namespace OpenInWSA.Managers
 {

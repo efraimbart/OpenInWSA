@@ -7,6 +7,7 @@ using OpenInWSA.Enums;
 using OpenInWSA.Extensions;
 using OpenInWSA.Managers;
 using OpenInWSA.Properties;
+using Console = OpenInWSA.Classes.Console;
 
 CheckElevate();
 CheckInit();

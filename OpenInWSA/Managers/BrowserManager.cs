@@ -5,6 +5,7 @@ using Microsoft.Win32;
 using OpenInWSA.Classes;
 using OpenInWSA.Enums;
 using OpenInWSA.Properties;
+using Console = OpenInWSA.Classes.Console;
 
 namespace OpenInWSA.Managers
 {
