@@ -4,7 +4,7 @@ Routes opened links through WSA (Windows Subsystem for Android™) and opens the
 
 ## Getting Started
 
-Instructions to set up `Open in Wsa` either using the latest release executable or via cloning the repo.
+Instructions to set up `Open in WSA` either using the latest release executable or via cloning the repo.
 
 ### Prerequisites
 
@@ -39,4 +39,6 @@ or
 
 ## Usage
 
-Click a link from within a (non-browser) Windows application and it will route it through WSA and open it in the applicable Android application. if none are found it will open the link in the default Windows browser.   
+Click a link from within a Windows application and it will route it through WSA and open it in the applicable Android application. if none are found it will open the link in the default Windows browser.
+
+To route links within Chrome through `Open in WSA` install the [Open in WSA Chrome Extension](https://chrome.google.com/webstore/detail/nkfpikoflncblmlajlcagaflndiijhhl) | [Repo](https://github.com/efraimbart/OpenInWSAChromeExtension) and right click on the given link.

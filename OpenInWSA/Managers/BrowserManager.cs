@@ -11,9 +11,10 @@ namespace OpenInWSA.Managers
 {
     public static class BrowserManager
     {
-        private const string OpenInWsa = "Open In WSA";
-        private const string OpenInWsaProgId = "OpenInWSAURL";
+        internal const string OpenInWsaProgId = "OpenInWSAURL";
         
+        private const string OpenInWsa = "Open In WSA";
+
         internal static bool UpdateDefaultBrowser(bool cancelable)
         {
             //TODO: Merge with LocalUser?
@@ -122,6 +123,7 @@ namespace OpenInWSA.Managers
                 openInWsaUrlKey.SetValue("", OpenInWsa);
                 openInWsaUrlKey.SetValue("EditFlags", 0x2); //TODO: Find out if needed
                 openInWsaUrlKey.SetValue("FriendlyTypeName", OpenInWsa); //TODO: Find out if needed
+                openInWsaUrlKey.SetValue("", $"URL:{OpenInWsa} Protocol");
                 openInWsaUrlKey.SetValue("URL Protocol", "");
                 
                 using var urlApplicationKey = openInWsaUrlKey.CreateSubKey("Application");
@@ -131,7 +133,7 @@ namespace OpenInWSA.Managers
 
                 using var urlDefaultIconKey = openInWsaUrlKey.CreateSubKey("DefaultIcon");
                 defaultIconKey.SetValue("", $"\"{path}\",0");
-                
+
                 using var urlCommandKey = openInWsaUrlKey.CreateSubKey(@"shell\open\command");
                 urlCommandKey.SetValue("", $"\"{path}\" \"%1\"");
 

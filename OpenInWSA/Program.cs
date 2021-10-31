@@ -14,13 +14,15 @@ CheckInit();
 
 if (args.Any())
 {
+    var url = args[0].Replace($"{BrowserManager.OpenInWsaProgId}://", "", StringComparison.InvariantCultureIgnoreCase);
+
     if (GetParentProcess().ProcessName == WsaManager.WsaClient)
     {
-        BrowserManager.OpenInBrowser(args[0]);
+        BrowserManager.OpenInBrowser(url);
     }
     else
     {
-        WsaManager.OpenInWsa(args[0]);
+        WsaManager.OpenInWsa(url);
     }
 }
 else
