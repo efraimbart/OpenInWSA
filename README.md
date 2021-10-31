@@ -1,6 +1,6 @@
 ﻿# Open in WSA
 
-Routes opened links through WSA (Windows Subsystem for Android™) and opens them in the applicable Android application, otherwise opens them in the default Windows browser.
+Routes clicked links through WSA (Windows Subsystem for Android™) and opens them in an applicable Android application if found, otherwise opens them in the default Windows browser.
 
 ## Getting Started
 
