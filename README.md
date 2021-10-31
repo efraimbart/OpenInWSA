@@ -19,11 +19,12 @@ Suggested:
 
 ### Installation
 
-1. ####Download Executable: 
-    Download the [latest release](https://github.com/efraimbart/OpenInWSA/releases/latest) executable.
+1. #### Download Executable: 
+    * Download the [latest release](https://github.com/efraimbart/OpenInWSA/releases/latest) executable.
 
 or
-2. ####Clone Repo
+
+2. #### Clone Repo
     
    * Download and set up [.Net 6.0](https://dotnet.microsoft.com/download/dotnet/6.0) 
    * Run `$ git clone https://github.com/efraimbart/OpenInWSA`
@@ -39,6 +40,6 @@ or
 
 ## Usage
 
-Click a link from within a Windows application and it will route it through WSA and open it in the applicable Android application. if none are found it will open the link in the default Windows browser.
+Click a link from within a Windows application and it will route through WSA and open in the applicable Android application. if none are found the link will open in the default Windows browser.
 
-To route links within Chrome through `Open in WSA` install the [Open in WSA Chrome Extension](https://chrome.google.com/webstore/detail/nkfpikoflncblmlajlcagaflndiijhhl) | [Repo](https://github.com/efraimbart/OpenInWSAChromeExtension) and right click on the given link.
+To route links from within Chrome through WSA install the [Open in WSA Chrome Extension](https://chrome.google.com/webstore/detail/nkfpikoflncblmlajlcagaflndiijhhl) | [Repo](https://github.com/efraimbart/OpenInWSAChromeExtension) and right click on a given link and click `Open link in WSA`.
