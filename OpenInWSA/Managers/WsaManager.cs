@@ -155,7 +155,8 @@ namespace OpenInWSA.Managers
                 
                 var command = $"am start -W -a android.intent.action.VIEW -d \"{url}\"";
 
-                AdbClient.ExecuteRemoteCommand(command, device, new ConsoleOutputReceiver());
+                //If not async, command does not complete and application does not exit. 
+                AdbClient.ExecuteRemoteCommandAsync(command, device, new ConsoleOutputReceiver(), new CancellationToken());
             }
             catch(Exception e)
             {
