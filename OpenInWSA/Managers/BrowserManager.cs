@@ -247,7 +247,7 @@ namespace OpenInWSA.Managers
             }
 
             command = command.Replace("%1", url);
-            var info = new ProcessStartInfo("cmd", $"/c {command}")
+            var info = new ProcessStartInfo("cmd", $@"/c ""{command}""")
             {
                 UseShellExecute = false,
                 CreateNoWindow = true
