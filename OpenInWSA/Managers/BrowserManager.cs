@@ -246,7 +246,7 @@ namespace OpenInWSA.Managers
                 return;
             }
 
-            command = command.Replace("%1", url);
+            command = command.Replace("\"%1\"", url).Replace("%1", url);
             var info = new ProcessStartInfo("cmd", $"/c {command}")
             {
                 UseShellExecute = false,
